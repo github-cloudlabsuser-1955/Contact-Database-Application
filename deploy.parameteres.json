@@ -1,21 +1,12 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "resourceGroupName": {
-            "value": ""
+        "sites_contanct_database_app_name": {
+            "value": null
         },
-        "location": {
-            "value": ""
-        },
-        "databaseName": {
-            "value": ""
-        },
-        "username": {
-            "value": ""
-        },
-        "password": {
-            "value": ""
+        "serverfarms_ASP_GitHubCopilotChallenges_bf13_externalid": {
+            "value": null
         }
     }
 }
