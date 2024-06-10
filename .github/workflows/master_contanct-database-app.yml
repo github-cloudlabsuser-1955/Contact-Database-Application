@@ -1,13 +1,16 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - contanct-database-app
+name: Build and deploy ASP app to Azure Web App - contanct-database-app
 
 on:
   push:
     branches:
       - master
   workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build:
@@ -16,32 +19,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '8.x'
-          include-prerelease: true
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Setup NuGet
-        run: dotnet restore
+        uses: NuGet/setup-nuget@v1.0.5
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Restore NuGet packages
+        run: nuget restore
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: Publish to folder
+        run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: ASP-app
+          path: '/published/**'
 
   deploy:
     runs-on: windows-latest
     needs: build
     environment:
-      name: 'Production'
+      name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -50,20 +50,19 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: .net-app
+          name: ASP-app
       
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_10CAB3BC0DEB4DA0810AC43337D10C40 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5F08814B725D463D836A3D93E44A237F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5F7A730401524F8B99655F8187103A71 }}
+          client-id: ${{ secrets.CLIENT_ID }}
+          tenant-id: ${{ secrets.TENANT_ID }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'contanct-database-app'
-          slot-name: 'Production'
+          slot-name: 'production'
           package: .
-          
